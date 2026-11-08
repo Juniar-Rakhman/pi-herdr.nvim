@@ -1,4 +1,4 @@
-# pi-herdr
+# pi-herdr.nvim
 
 > Lightweight bridge between Neovim and a running Pi coding agent via Herdr.
 
@@ -21,7 +21,7 @@ Minimal Neovim plugin that routes prompts to an already-running [Pi](https://git
 
 ```lua
 {
-  "Juniar-Rakhman/pi-herdr",
+  "Juniar-Rakhman/pi-herdr.nvim",
   opts = {},
 }
 ```
