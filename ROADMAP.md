@@ -1,4 +1,4 @@
-# pi-herdr Roadmap
+# pi-herdr.nvim Roadmap
 
 Features that are out of scope for the current minimal implementation but may be added later.
 
