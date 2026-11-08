@@ -33,7 +33,7 @@ require("pi-herdr").setup({
   keymap = "<leader>pa",         -- normal + visual mode mapping
   buffer_keymap = "<leader>pb",  -- ask about the current buffer only
   focus_after_send = true,       -- focus the Pi agent pane after sending
-  submit_after_send = false,     -- false types the prompt in Pi without submitting
+  submit_after_send = false,     -- true submits immediately; false types into Pi for editing
   herdr_binary = nil,            -- path to herdr binary; defaults to "herdr"
 })
 ```
@@ -59,6 +59,22 @@ Type these directly in the floating prompt or in custom prompt templates:
 | `@this` | Current file/line, or selected range (with columns for char/block selections) |
 | `@buffer` | Full path of the current buffer |
 | `@diagnostics` | Diagnostics for the current buffer or selection |
+
+## Built-in prompts
+
+Available via `:PiSelect`:
+
+| Name | Template |
+|---|---|
+| `explain` | Explain @this |
+| `fix` | Fix @this |
+| `test` | Add tests for @this |
+| `document` | Document @this |
+| `optimize` | Optimize @this |
+| `review` | Review @this |
+| `implement` | Implement @this |
+
+You can override or extend these in `setup({ prompts = { ... } })`.
 
 ## Commands
 
