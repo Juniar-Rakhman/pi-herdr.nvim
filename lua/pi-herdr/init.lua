@@ -103,7 +103,8 @@ local function find_pi_agent(callback)
       local agents = result and result.result and result.result.agents or {}
       local matches = {}
       for _, agent in ipairs(agents) do
-        if agent.agent == "pi" then
+        -- Accept both the Pi coding agent and omp (its Herdr-detected variant).
+        if agent.agent == "pi" or agent.agent == "omp" then
           -- Prefer foreground_cwd (where the pane currently is) over cwd.
           local agent_cwd = M.canonical_path(agent.foreground_cwd or agent.cwd)
           if agent_cwd and agent_cwd == cwd then
