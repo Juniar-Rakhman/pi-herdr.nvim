@@ -87,11 +87,13 @@ local function herdr_spawn(args, callback)
   end)
 end
 
---- Find a Pi agent whose working directory matches Neovim's cwd.
+--- Find a Pi agent running in the same Herdr tab as Neovim.
 -- If exactly one matches, it is returned directly. If multiple match, the user
 -- is prompted to pick one. Errors out only when no agent matches.
+-- Falls back to matching by canonicalized cwd when not running inside Herdr.
 -- @param callback function(agent, err) called with the matched agent or an error string
 local function find_pi_agent(callback)
+  local tab_id = vim.env.HERDR_TAB_ID
   local cwd = M.canonical_path(vim.fn.getcwd())
   herdr_spawn({ "agent", "list" }, function(result, err)
     -- vim.schedule wraps the callback so we can safely call Vimscript functions and notify.
@@ -105,15 +107,48 @@ local function find_pi_agent(callback)
       for _, agent in ipairs(agents) do
         -- Accept both the Pi coding agent and omp (its Herdr-detected variant).
         if agent.agent == "pi" or agent.agent == "omp" then
-          -- Prefer foreground_cwd (where the pane currently is) over cwd.
-          local agent_cwd = M.canonical_path(agent.foreground_cwd or agent.cwd)
-          if agent_cwd and agent_cwd == cwd then
+          local same_tab = tab_id and agent.tab_id == tab_id
+          local same_cwd = (not tab_id) and M.canonical_path(agent.foreground_cwd or agent.cwd) == cwd
+          if same_tab or same_cwd then
             matches[#matches + 1] = agent
           end
         end
       end
       if #matches == 0 then
-        callback(nil, "No Pi agent found for " .. cwd)
+        if tab_id then
+          -- Spawn a new pane on the right and start Pi there.
+          local split_cwd = vim.fn.getcwd()
+          herdr_spawn({ "pane", "split", "--current", "--direction", "right", "--cwd", split_cwd }, function(split_result, split_err)
+            vim.schedule(function()
+              if split_err then
+                callback(nil, split_err)
+                return
+              end
+              local new_pane = split_result and split_result.result and split_result.result.pane
+              local new_pane_id = new_pane and new_pane.pane_id
+              if not new_pane_id then
+                callback(nil, "Failed to create Herdr pane")
+                return
+              end
+              herdr_spawn({ "agent", "start", "pi", "--kind", "pi", "--pane", new_pane_id }, function(start_result, start_err)
+                vim.schedule(function()
+                  if start_err then
+                    callback(nil, start_err)
+                    return
+                  end
+                  local new_agent = start_result and start_result.result and start_result.result.agent
+                  if not new_agent then
+                    callback(nil, "Failed to start Pi in new pane")
+                    return
+                  end
+                  callback(new_agent, nil)
+                end)
+              end)
+            end)
+          end)
+        else
+          callback(nil, "No Pi agent found for " .. (cwd or "?"))
+        end
       elseif #matches == 1 then
         callback(matches[1], nil)
       else
@@ -290,7 +325,7 @@ function M.build_context_this(opts)
   end
   -- Normal mode or auto-detect with no active selection.
   if opts.mode == nil then
-    local s, e = visual_range()
+    local s = visual_range()
     if s then
       return M.build_context_visual()
     end

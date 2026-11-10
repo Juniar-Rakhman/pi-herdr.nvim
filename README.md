@@ -5,7 +5,7 @@
 Minimal Neovim plugin that routes prompts to an already-running [Pi](https://github.com/earendil-works/pi-coding-agent) coding agent managed by [Herdr](https://github.com/ctbaum/herdr).
 
 - Sends compact context only (`@file:line` in normal mode, `@file:start-end` for line-wise visual, `@file:start-end:startcol-endcol` for char/block visual)
-- Matches agents by **exact canonicalized CWD** against `herdr agent list`; prompts you to pick when multiple match
+- Matches agents running in the **same Herdr tab** as Neovim (falls back to exact canonicalized CWD outside Herdr); if none is found, spawns a new pane on the right and starts Pi there; prompts you to pick when multiple match
 - Never starts a new Pi process or terminal
 - Minimal floating prompt: `Enter` sends, `Esc`/`q` cancels
 - Automatically uses `snacks.input` when available (with π icon), falling back to a custom float
